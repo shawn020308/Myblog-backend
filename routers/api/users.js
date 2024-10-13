@@ -4,6 +4,10 @@ const router = express.Router();
 const User = require('../../models/user');
 const bcrypt = require('bcrypt');
 const gravatar = require('gravatar');
+const jwt = require('jsonwebtoken');
+const keys = require('../../config/keys');
+const {secretAccessKey} = require("../../config/keys");
+const passport = require("passport");
 
 // $router GET api/users/test
 // @desc 返回的请求的json数据
@@ -29,7 +33,8 @@ router.post('/register', (req, res) => {
                     user_name: req.body.user_name,
                     user_email: req.body.user_email,
                     user_password: req.body.user_password,
-                    // user_avatar: req.body.user_avatar,
+                    user_identity:req.body.user_identity,
+                    user_avatar,
                 })
                 bcrypt.genSalt(10, (err, salt) => {
                     bcrypt.hash(newUser.user_password,salt, (err, hash) => {
@@ -43,5 +48,52 @@ router.post('/register', (req, res) => {
             }
         })
 })
+
+// $router POST api/users/login
+// @desc 返回token jwt passport
+// @access public
+
+router.post('/login', (req, res) => {
+    const user_email = req.body.user_email;
+    const user_password = req.body.user_password;
+    User.findOne({user_email})
+        .then(user => {
+            if (!user) {
+                return res.status(404).json({msg: "User does not exist"});
+            }
+            bcrypt.compare(user_password, user.user_password)
+                .then(isMatch => {
+                    if (isMatch) {
+                        const rule = {id:user.id , name:user.user_name,avatar:user.avatar , identity : user.user_identity};
+                        jwt.sign(rule, keys.secretAccessKey,{expiresIn:3600}, (err, token) => {
+                            if (err) throw err;
+                            res.json({
+                                success:true,
+                                token:"Bearer " + token,
+                            })
+                        })
+                    } else {
+                        return res.status(400).json({msg: "password not match"});
+                    }
+                })
+        })
+})
+
+// $router GET api/users/current
+// @desc return current user
+// @access Private
+router.get('/current', passport.authenticate("jwt", { session: false }), (req, res) => {
+    // console.log('Request user:', req.user);
+    if (req.user) {
+        return res.json({
+            id: req.user._id,
+            name: req.user.user_name,
+            email: req.user.user_email,
+            identity: req.user.user_identity,
+        });
+    } else {
+        return res.status(401).json({ msg: "User not found" });
+    }
+});
 
 module.exports = router;
