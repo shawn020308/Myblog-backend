@@ -11,6 +11,9 @@ const passport = require("passport");
 // 引入user.js
 const users = require('./routers/api/users');
 
+// 引入BlogInfo.js
+const blogInfo = require("./routers/api/blogInfo");
+
 // db config
 const db = require("./config/keys").mongoURI;
 mongoose.connect(db)
@@ -41,7 +44,9 @@ app.use(bodyParser.json());
 app.use(cors());
 app.use(express.json()); // 处理JSON请求
 
+// 使用routes
 app.use("/api/users",users)
+app.use("/api/blogInfo",blogInfo)
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
