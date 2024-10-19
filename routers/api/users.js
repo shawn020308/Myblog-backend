@@ -21,6 +21,8 @@ router.get('/test', (req, res) => {
 // @access public
 router.post('/register', async (req, res) => {
     try {
+
+        console.log('Received request body:', req.body);
         // 解构请求体中的字段
         const { user_name, user_email, user_password, user_identity } = req.body;
 
@@ -45,7 +47,7 @@ router.post('/register', async (req, res) => {
         const newUser = new User({
             user_name,
             user_email,
-            user_identity,
+            user_identity: "common",
             user_avatar,
         });
 

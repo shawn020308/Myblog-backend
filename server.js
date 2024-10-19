@@ -38,7 +38,7 @@ app.use(morgan('combined', { stream: accessLogStream }));
 
 
 // 使用body-parser 中间件
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: true  }));
 app.use(bodyParser.json());
 
 app.use(cors({
